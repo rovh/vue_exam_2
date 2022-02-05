@@ -1,28 +1,30 @@
 <template>
-  <div>
+  <v-container fluid>
     <form
       v-if="info"
       class="add"
-      @submit="send"
-      method="post"
       action="https://demo-api.vsdev.space/api/delivery/sales"
+      method="post"
+      @submit="send"
     >
       <h1 class="heading">Добавления</h1>
       <label v-for="(item, i) in info" :key="i">
-        {{ item.title }}
+        <p>{{ item.title }}</p>
         <input
           v-if="item.type !== 'select'"
-          :type="item.type"
-          v-model="keys[i]"
-          :name="keys[i]"
           :id="keys[i]"
+          v-model="keys[i]"
+          class="field"
+          :type="item.type"
+          :name="keys[i]"
+          required
         />
-        <select v-else :name="keys[i]">
+        <select v-else class="field" :name="keys[i]" required v-model="keys[i]">
           <option
             v-for="value in item.values"
-            :value="value"
-            :key="value"
             :id="keys[i]"
+            :key="value"
+            :value="value"
           >
             {{ value }}
           </option>
@@ -31,7 +33,51 @@
       <button class="button" type="submit">Добавить</button>
     </form>
     <LoaderComponent v-else />
-  </div>
+    <div class="content">
+      <h2>Все доставки</h2>
+      <v-row dense>
+        <v-col v-for="(el, i) in del" :key="i" class="d-inline">
+          <v-card class="mx-auto my-3" width="400" height="700">
+            <v-img v-if="el.type === 'truck'" src="/truck_img.png"></v-img>
+            <v-img v-if="el.type === 'ship'" src="/ship_img.png"></v-img>
+            <v-img v-if="el.type === 'train'" src="/train_img.png"></v-img>
+            <v-img v-if="el.type === 'plane'" src="/plane_img.png"></v-img>
+
+            <v-card-title class="px-8">Тип доставки {{ el.type }}</v-card-title>
+            <v-card-text>
+              <div class="px-8 mb-2 text-subtitle-1">
+                Из {{ el.departure_city }}
+              </div>
+            </v-card-text>
+            <v-card-text>
+              <div class="px-8 mb-2 text-subtitle-1">
+                В {{ el.destination_city }}
+              </div>
+            </v-card-text>
+            <v-divider class="mx-4"></v-divider>
+            <v-card-title class="px-8">{{ el.departure_address }}</v-card-title>
+            <v-card-title class="px-8">{{
+              el.destination_address
+            }}</v-card-title>
+            <v-card-text>
+              <v-list-item two-line>
+                <v-list-item-content>
+                  <v-list-item-title>Телефон</v-list-item-title>
+                  <v-list-item-subtitle>{{ el.volume }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item two-line>
+                <v-list-item-content>
+                  <v-list-item-title>Вес</v-list-item-title>
+                  <v-list-item-subtitle>{{ el.weight }}</v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+    </div>
+  </v-container>
 </template>
 <script>
 import axios from 'axios'
@@ -52,19 +98,23 @@ export default {
       destination_address: null,
       weight: null,
       volume: null,
+      del: [],
     }
   },
   computed: {
     ...mapGetters({
       infoData: 'mainpage/getForm',
+      deliviries: 'mainpage/getDel',
     }),
   },
   async mounted() {
     const data = await this.infoData
     this.info = data.data.fields
     this.keys = Object.keys(data.data.fields)
-    console.log(this.keys)
+    const dataa = await this.deliviries
+    this.del = dataa.data
   },
+  updated() {},
   methods: {
     async send(e) {
       e.preventDefault()
@@ -77,11 +127,14 @@ export default {
       data.weight = e.target[5].value
       data.volume = e.target[6].value
       console.log(data)
-      const resp = await axios.post(
-        'https://demo-api.vsdev.space/api/delivery/sales',
-        data
-      )
-      console.log(resp)
+      await axios.post('https://demo-api.vsdev.space/api/delivery/sales', data)
+      this.type = ''
+      this.departure_city = ''
+      this.departure_address = ''
+      this.destination_city = ''
+      this.destination_address = ''
+      this.weight = ''
+      this.volume = ''
     },
   },
 }
@@ -103,5 +156,27 @@ export default {
   border: none;
   padding: 7px 12px;
   border-radius: 5px;
+}
+.content {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-direction: column;
+}
+.field {
+  appearance: none;
+  background-color: transparent;
+  border: 2px solid;
+  border-radius: 20px;
+  padding: 10px;
+  margin: 0;
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: inherit;
+  line-height: inherit;
+}
+h2 {
+  margin-bottom: 20px;
 }
 </style>

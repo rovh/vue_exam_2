@@ -6,10 +6,6 @@
         <img class="mainimage" :src="info.image" alt="" />
       </div>
       <p class="main__text">{{ info.text }}</p>
-      <h2>Все доставки</h2>
-      <div v-for="(el, i) in del" :key="i" class="delivery">
-        Доставка типа: {{ el.type }}
-      </div>
     </div>
     <LoaderComponent v-else />
   </div>
